@@ -22,6 +22,7 @@
 #include "Settings.h"
 #include <string>
 #include "log/log.h"
+#include <fstream>
 
 namespace fbxconv {
 
@@ -74,6 +75,8 @@ struct FbxConvCommand {
 			}
 			else if (settings->inFile.length() < 1)
 				settings->inFile = arg;
+			else if (settings->textureLoadDir.length() < 1)
+				settings->textureLoadDir = arg;
 			else if (settings->outFile.length() < 1)
 				settings->outFile = arg;
 			else
@@ -117,10 +120,17 @@ struct FbxConvCommand {
 	}
 private:
 	void validate() {
-		if (settings->inFile.empty()) {
+		if (settings->inFile.empty() || settings->textureLoadDir.empty()) {
 			log->error(error = log::eCommandLineMissingInputFile);
 			return;
 		}
+		
+		if (!parseTexturePaths())
+		{
+			return;
+		}
+
+
 #ifdef ALLOW_INPUT_TYPE
 		if (inType == FILETYPE_AUTO)
 			inType = guessType(inFile, FILETYPE_IN_DEFAULT);
@@ -130,7 +140,8 @@ private:
 		if (settings->outFile.empty())
 			setExtension(
 				settings->outFile = settings->inFile, 
-				settings->outType = (settings->outType == FILETYPE_AUTO ? FILETYPE_OUT_DEFAULT : settings->outType));
+				".fbx",
+				"_messiah");
 		else if (settings->outType == FILETYPE_AUTO)
 			settings->outType = guessType(settings->outFile);
 		if (settings->maxVertexBonesCount < 0 || settings->maxVertexBonesCount > 8) {
@@ -145,6 +156,66 @@ private:
 			log->error(error = log::eCommandLineInvalidVertexCount);
 			return;
 		}
+	}
+
+	bool parseTexturePaths()
+	{
+		std::string material_info = settings->inFile;
+		setExtension(material_info, ".txt");
+		std::ifstream fin;
+		/*if (!fin)
+		{
+			log->error(error = log::MissingTexturePathsFile, material_info);
+			return false;
+		}*/
+		char buff[1024];
+		fin.open(material_info);
+		if (fin.is_open())
+		{
+			printf("%s\n", settings->textureLoadDir.c_str());
+			std::string last_material_id = "";
+			while (!fin.eof())
+			{
+				memset(buff, 0, 1024);
+				fin.getline(buff, 1204);
+				std::string message = buff;
+				int i = 0;
+				
+				for (; i < message.size(); ++i)
+					if (!isdigit(message[i])) break;
+				if (i == message.size())
+				{
+					last_material_id = message;
+					printf("%s\n", last_material_id.c_str());
+					settings->texturePaths[last_material_id] = std::map<std::string, std::string>{};
+				}
+				else
+				{
+					std::string tex_type;
+					int e = (int)message.find_last_of('.');
+					int s = (int)message.find_last_of('_');
+					tex_type = message.substr(s + 1, e - s - 1);
+					
+					if (fbxconv::legal_postfix.find(tex_type) != fbxconv::legal_postfix.end()
+						&& settings->texturePaths[last_material_id].find(tex_type)
+						== settings->texturePaths[last_material_id].end())
+					{
+						int pos = message.find_last_of('\\');
+						message = settings->textureLoadDir + message.substr(pos, e - pos) + ".tga";
+						printf("path:%s\n", message.c_str());
+						settings->texturePaths[last_material_id][tex_type] = message;
+					}
+						
+				}
+			}
+			fin.close();
+		}
+		else
+		{
+			log->error(error = log::TexturePathsFileCannotOpen, material_info);
+			return false;
+		}
+		return true;
 	}
 
 	int parseType(const char* arg, const int &def = -1) {
@@ -167,19 +238,19 @@ private:
 		return parseType(ext.c_str(), def);
 	}
 
-	void setExtension(std::string &fn, const std::string &ext) const {
+	void setExtension(std::string &fn, const std::string &ext, std::string extra_info = "") const {
 		int o = (int)fn.find_last_of('.');
 		if (o == std::string::npos)
-			fn += "." + ext;
+			fn += extra_info + "." + ext;
 		else
-			fn = fn.substr(0, ++o) + ext;
+			fn = fn.substr(0, o) + extra_info + ext;
 	}
 
 	void setExtension(std::string &fn, const int &type) const {
 		switch(type) {
-		case FILETYPE_FBX:	return setExtension(fn, "fbx");
-		case FILETYPE_G3DB:	return setExtension(fn, "g3db");
-		case FILETYPE_G3DJ:	return setExtension(fn, "g3dj");
+		case FILETYPE_FBX:	return setExtension(fn, ".fbx");
+		case FILETYPE_G3DB:	return setExtension(fn, ".g3db");
+		case FILETYPE_G3DJ:	return setExtension(fn, ".g3dj");
 		default:			return setExtension(fn, "");
 		}
 	}

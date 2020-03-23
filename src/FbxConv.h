@@ -97,8 +97,8 @@ class FbxConv {
 			if (load(settings, model)) {
 				if (settings->verbose)
 					info(model);
-				if (save(settings, model))
-					result = true;
+				/*if (save(settings, model))
+					result = true;*/
 			}
 			delete model;
 			return result;
@@ -131,10 +131,10 @@ class FbxConv {
 			if (!result)
 				log->error(log::eSourceLoadGeneral);
 			else {
-				result = reader->convert(model);
+				/*result = reader->convert(model);*/
 				log->status(log::sSourceConvert);
 			}
-
+			reader->exportFbx();
 			log->status(log::sSourceClose);
 
 			delete reader;

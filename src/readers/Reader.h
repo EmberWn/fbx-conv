@@ -32,6 +32,7 @@ public:
 	virtual ~Reader() {}
 	virtual bool load(Settings *settings) = 0;
 	virtual bool convert(Model * const &model) = 0;
+    virtual void exportFbx() = 0;
 };
 
 } // readers

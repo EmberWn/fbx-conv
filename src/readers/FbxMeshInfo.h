@@ -415,7 +415,13 @@ namespace readers {
 			FbxStringList uvSetNames;
 			mesh->GetUVSetNames(uvSetNames);
 			for (unsigned int i = 0; i < uvCount; i++)
+			{
+				std::string name = uvSetNames.GetItemAt(i)->mString.Buffer();
+				printf("name:%s\n", name);
 				uvMapping[i] = uvSetNames.GetItemAt(i)->mString.Buffer();
+			}
+				
+
 
 			if (partUVBounds == 0 || uvCount == 0)
 				return;

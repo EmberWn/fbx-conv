@@ -39,6 +39,8 @@ LOG_SET_MSG(eCommandLineInvalidVertexWeight,	"Maximum vertex weights must be bet
 LOG_SET_MSG(eCommandLineInvalidBoneCount,		"Maximum bones per nodepart must be greater or equal to the maximum vertex weights")
 LOG_SET_MSG(eCommandLineInvalidVertexCount,		"Maximum vertex count must be between 0 and 32k")
 LOG_SET_MSG(eCommandLineUnknownFiletype,		"Unknown filetype: %s")
+LOG_SET_MSG(MissingTexturePathsFile,            "Missing TexturePathsFile: %s, no need to convert or lose")
+LOG_SET_MSG(TexturePathsFileCannotOpen,         "TexturePathsFile: %s, open failed")
 
 LOG_SET_MSG(sSourceLoad,						"Loading source file")
 LOG_SET_MSG(sSourceLoadFbxVersion,              "FBX file version %d %d %d")

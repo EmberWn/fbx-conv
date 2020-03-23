@@ -21,6 +21,9 @@
 #define SETTINGS_H
 
 #include <string>
+#include <set>
+#include <map>
+#include <vector>
 
 namespace fbxconv {
 
@@ -28,10 +31,18 @@ namespace fbxconv {
 #define FILETYPE_FBX			0x10
 #define FILETYPE_G3DB			0x20
 #define FILETYPE_G3DJ			0x21
-#define FILETYPE_OUT_DEFAULT	FILETYPE_G3DB
+#define FILETYPE_OUT_DEFAULT	FILETYPE_FBX
 #define FILETYPE_IN_DEFAULT		FILETYPE_FBX
 
+std::set<std::string> legal_postfix = std::set<std::string>{ "a", "n", "m"};
+
 struct Settings {
+
+	// dir to load texture
+	std::string textureLoadDir;
+
+	std::map<std::string, std::map<std::string, std::string>> texturePaths;
+
 	std::string inFile;
 	int inType;
 	std::string outFile;
@@ -51,6 +62,7 @@ struct Settings {
 	int maxVertexCount;
 	/** The maximum allowed amount of indices in one mesh, only used when deciding to merge meshes. */
 	int maxIndexCount;
+
 };
 
 }

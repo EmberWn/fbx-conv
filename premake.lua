@@ -11,6 +11,7 @@
 --       up with a Makefile that has god knows what in it
 
 FBX_SDK_ROOT = os.getenv("FBX_SDK_ROOT")
+FBX_SDK_ROOT = "D:\\Program Files\\Autodesk\\FBX\\FBX SDK\\2019.0"
 if not FBX_SDK_ROOT then
 	printf("ERROR: Environment variable FBX_SDK_ROOT is not set.")
 	printf("Set it to something like: C:\\Program Files\\Autodesk\\FBX\\FBX SDK\\2016.1")

@@ -146,7 +146,18 @@ namespace readers {
 				fetchTextureBounds();
 			return !(scene == 0);
 		}
-
+		void exportFbx() {
+			FbxExporter* exporter = FbxExporter::Create(manager, "");
+			const char* filename = settings->outFile.c_str();
+			// Initialize the exporter.
+			bool lExportStatus = exporter->Initialize(filename, -1, manager->GetIOSettings());
+			if (!lExportStatus) {
+				printf("Call to FbxExporter::Initialize() failed.\n");
+				printf("Error returned: %s\n\n", exporter->GetStatus().GetErrorString());
+				
+			}
+			exporter->Export(scene);
+		}
 		virtual ~FbxConverter() {
 			for (std::vector<FbxMeshInfo *>::iterator itr = meshInfos.begin(); itr != meshInfos.end(); ++itr)
 				delete (*itr);
@@ -491,6 +502,7 @@ namespace readers {
 				}
 			}
 			int cnt = scene->GetGeometryCount();
+			printf("meshcount:%d", cnt);
 			for (int i = 0; i < cnt; ++i) {
 				FbxGeometry * geometry = scene->GetGeometry(i);
 				if (fbxMeshMap.find(geometry) == fbxMeshMap.end()) {
@@ -499,6 +511,16 @@ namespace readers {
 						continue;
 					}
 					FbxMesh *mesh = (FbxMesh*)geometry;
+					
+					FbxLayer* lLayer0 = mesh->GetLayer(0);
+					lLayer0->CreateLayerElementOfType(FbxLayerElement::eSmoothing);
+					FbxLayerElementSmoothing* smooth = lLayer0->GetSmoothing();
+					//FbxLayerElementSmoothing* lLayerElementSmoothing = FbxLayerElementSmoothing::Create(mesh, "Smoothing");
+					
+					smooth->SetReferenceMode(FbxLayerElement::eDirect);    // must be direct
+					//smooth->SetMappingMode(FbxLayerElement::eByPolygon);
+					/*lLayer0->SetSmoothing(lLayerElementSmoothing);*/
+
 					int indexCount = (mesh->GetPolygonCount() * 3);
 					log->verbose(log::iSourceConvertFbxMeshInfo, getGeometryName(mesh), mesh->GetPolygonCount(), indexCount, mesh->GetControlPointsCount());
 					if (indexCount > settings->maxIndexCount)
@@ -573,7 +595,31 @@ namespace readers {
 				result->emissiveFactor.set(lambert->EmissiveFactor.Get());
 				result->emissive.set(lambert->Emissive.Get().mData);
 			}
+			std::string matrtial_name = material->GetName();
 
+			int s = matrtial_name.find_last_of('_');
+			std::string material_id = matrtial_name.substr(s + 1);
+			printf("material_id:%s", material_id.c_str());
+			std::string filename = settings->texturePaths[material_id]["n"];
+			FbxFileTexture* lTexture = FbxFileTexture::Create(scene, "normalMap");
+
+			// Set texture properties.
+			lTexture->SetFileName(filename.c_str()); // Resource file is in current directory.
+			lTexture->SetTextureUse(FbxTexture::eStandard);
+			lTexture->SetMappingType(FbxTexture::eUV);
+			lTexture->SetMaterialUse(FbxFileTexture::eModelMaterial);
+			lTexture->SetSwapUV(false);
+			lTexture->SetTranslation(0.0, 0.0);
+			lTexture->SetScale(1.0, 1.0);
+			lTexture->SetRotation(0.0, 0.0);
+			lambert->NormalMap.ConnectSrcObject(lTexture);
+			
+			// don't forget to connect the texture to the corresponding property of the material
+			
+			filename = settings->texturePaths[material_id]["a"];
+			FbxFileTexture* diffuse_texture = lambert->Diffuse.GetSrcObject<FbxFileTexture>(0);
+			diffuse_texture->SetFileName(filename.c_str());
+			
 			addTextures(result->id.c_str(), result->textures, lambert->Ambient, Material::Texture::Ambient);
 			addTextures(result->id.c_str(), result->textures, lambert->Diffuse, Material::Texture::Diffuse);
 			addTextures(result->id.c_str(), result->textures, lambert->Emissive, Material::Texture::Emissive);
@@ -630,6 +676,7 @@ namespace readers {
 			result->source = texture;
 			result->id = texture->GetName();
 			result->path = texture->GetFileName();
+			/*texture->SetRelativeFileName("E:\\sekiro\\Sekiro\\Sekiro\\common\\Sekiro\\unpack\\parts\\common_body-tpf\\FC_M_0000_head_n.tga");*/
 			set<2>(result->uvTranslation, texture->GetUVTranslation().mData);
 			set<2>(result->uvScale, texture->GetUVScaling().mData);
 			result->usage = usage;

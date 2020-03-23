@@ -78,7 +78,7 @@ namespace log {
 			va_end(vl);
 			return result;
 		}
-
+		// 参数个数可变
 		const char *format(const char *m, ...) {
 			va_list vl;
 			va_start(vl, m);

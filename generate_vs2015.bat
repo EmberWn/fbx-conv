@@ -5,5 +5,7 @@ echo 'premake5' not found in your path.
 echo Premake can be downloaded from https://premake.github.io/download.html
 exit /b
 )
-
+rem pause
 premake5 --file=premake.lua vs2015
+
+pause
