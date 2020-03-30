@@ -654,6 +654,23 @@ namespace readers {
 			return result;
 		}
 
+		void addShader(FbxSurfaceMaterial* lHlslMat)
+		{
+			FbxImplementation* lImpl = FbxImplementation::Create(scene, FbxString("Hlsl_Implementation"));
+			lHlslMat->AddImplementation(lImpl);
+			lHlslMat->SetDefaultImplementation(lImpl);
+			lImpl->RenderAPI = FBXSDK_RENDERING_API_DIRECTX;
+			lImpl->RenderAPIVersion = "9.0";
+			lImpl->Language = FBXSDK_SHADING_LANGUAGE_HLSL;
+			lImpl->LanguageVersion = "1.0";
+			FbxBindingTable* lTable = lTable = lImpl->AddNewTable("root", "shader");
+			lImpl->RootBindingName = "root";
+			// shader file
+			lTable->DescAbsoluteURL = "PBR_SEKIRO";
+			// technique name
+			lTable->DescTAG = "dx9";
+		}
+
 		void addTextures(const char *materialName, std::vector<Material::Texture *> &textures, const FbxProperty &prop,  const Material::Texture::Usage &usage) {
 			const unsigned int ftCount = prop.GetSrcObjectCount<FbxFileTexture>();
 			for (unsigned int ft = 0; ft < ftCount; ++ft)

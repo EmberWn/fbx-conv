@@ -414,10 +414,25 @@ namespace readers {
 		void fetchUVInfo() {
 			FbxStringList uvSetNames;
 			mesh->GetUVSetNames(uvSetNames);
+			FbxLayer* lLayer0 = mesh->GetLayer(0);
+			FbxLayerElementUV* uvs = lLayer0->GetUVs();
+			
+			std::string name = "UVChannel_1";
+			uvs->SetName(name.c_str());
+			/*uvs->SetMappingMode(FbxLayerElement::eByPolygonVertex);
+			
+			uvs->SetReferenceMode(FbxLayerElement::eIndexToDirect);
+			FbxArray<const FbxLayerElementUV*> uvsets = lLayer0->GetUVSets();*/
+
+
 			for (unsigned int i = 0; i < uvCount; i++)
 			{
 				std::string name = uvSetNames.GetItemAt(i)->mString.Buffer();
-				printf("name:%s\n", name);
+				const char* lUVSetName = uvSetNames.GetStringAt(i);
+				
+				/*printf("name:%s\n", uvsets[i]->GetMappingMode());
+				printf("name:%s\n", uvsets[i]->GetReferenceMode());*/
+
 				uvMapping[i] = uvSetNames.GetItemAt(i)->mString.Buffer();
 			}
 				
