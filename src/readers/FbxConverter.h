@@ -176,7 +176,7 @@ namespace readers {
 			FbxTransform::EInheritType inheritType;
 			node->GetTransformationInheritType(inheritType);
 			if (inheritType == FbxTransform::eInheritRrSs) {
-				log->warning(log::wSourceLoadFbxNodeRrSs, node->GetName());
+				/*log->warning(log::wSourceLoadFbxNodeRrSs, node->GetName());*/
 				node->SetTransformationInheritType(FbxTransform::eInheritRSrs);
 			}
 			for (int i = 0; i < node->GetChildCount(); i++)
@@ -595,12 +595,17 @@ namespace readers {
 				result->emissiveFactor.set(lambert->EmissiveFactor.Get());
 				result->emissive.set(lambert->Emissive.Get().mData);
 			}
-			std::string matrtial_name = material->GetName();
+			std::string material_name = material->GetName();
 
-			int s = matrtial_name.find_last_of('_');
-			std::string material_id = matrtial_name.substr(s + 1);
-			printf("material_id:%s", material_id.c_str());
+			int s = material_name.find_last_of('_');
+			std::string material_id = material_name.substr(s + 1);
+			if (material_id == "mtd")
+			{
+				printf("mtd material:%s\n", material_name);
+				return result;
 
+			}
+			
 			// add diffuse map
 			std::string filename = settings->texturePaths[material_id]["a"];
 			FbxFileTexture* diffuse_texture = lambert->Diffuse.GetSrcObject<FbxFileTexture>(0);
@@ -678,11 +683,11 @@ namespace readers {
 		void addShader(FbxSurfaceMaterial* lHlslMat)
 		{
 			
-			FbxProperty::Create(lHlslMat, FbxStringDT, "ShadingName");
+			/*FbxProperty::Create(lHlslMat, FbxStringDT, "ShadingName");
 			FbxProperty prop = lHlslMat->FindProperty("ShadingName");
 			prop.ModifyFlag(FbxPropertyFlags::eUserDefined, true);
 			FbxString shaderName = FbxString("D:\h52m\src\Engine\EngineShaders\SDF.fx");
-			prop.Set(shaderName);
+			prop.Set(shaderName);*/
 		}
 
 		void addTextures(const char *materialName, std::vector<Material::Texture *> &textures, const FbxProperty &prop,  const Material::Texture::Usage &usage) {

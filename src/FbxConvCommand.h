@@ -193,6 +193,18 @@ private:
 				{
 					std::string tex_type;
 					int e = (int)message.find_last_of('.');
+					std::string extern_name = message.substr(e + 1);
+					if (extern_name == "mtd")
+					{
+						printf("texture path store in mtd file\n");
+						printf("path:%s\n", message.c_str());
+						continue;
+					}
+					else if (extern_name != "tif")
+					{
+						printf("texture path format error\n");
+						return false;
+					}
 					int s = (int)message.find_last_of('_');
 					tex_type = message.substr(s + 1, e - s - 1);
 					
