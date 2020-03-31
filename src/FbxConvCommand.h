@@ -141,7 +141,7 @@ private:
 			setExtension(
 				settings->outFile = settings->inFile, 
 				".fbx",
-				"_messiah");
+				"_mh");
 		else if (settings->outType == FILETYPE_AUTO)
 			settings->outType = guessType(settings->outFile);
 		if (settings->maxVertexBonesCount < 0 || settings->maxVertexBonesCount > 8) {
