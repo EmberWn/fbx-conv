@@ -600,27 +600,20 @@ namespace readers {
 			int s = matrtial_name.find_last_of('_');
 			std::string material_id = matrtial_name.substr(s + 1);
 			printf("material_id:%s", material_id.c_str());
-			std::string filename = settings->texturePaths[material_id]["n"];
-			FbxFileTexture* lTexture = FbxFileTexture::Create(scene, "normalMap");
 
-			// Set texture properties.
-			lTexture->SetFileName(filename.c_str()); // Resource file is in current directory.
-			lTexture->SetTextureUse(FbxTexture::eStandard);
-			lTexture->SetMappingType(FbxTexture::eUV);
-			lTexture->SetMaterialUse(FbxFileTexture::eModelMaterial);
-			lTexture->SetSwapUV(false);
-			lTexture->SetTranslation(0.0, 0.0);
-			lTexture->SetScale(1.0, 1.0);
-			lTexture->SetRotation(0.0, 0.0);
-			lambert->NormalMap.ConnectSrcObject(lTexture);
-			
-			// don't forget to connect the texture to the corresponding property of the material
-			
-			filename = settings->texturePaths[material_id]["a"];
+			// add diffuse map
+			std::string filename = settings->texturePaths[material_id]["a"];
 			FbxFileTexture* diffuse_texture = lambert->Diffuse.GetSrcObject<FbxFileTexture>(0);
 			diffuse_texture->SetFileName(filename.c_str());
+
+			// create and add normal map
+			FbxFileTexture* normalTexture = createTexture("n", "normalMap", material_id);
+			if (normalTexture)
+			{
+				lambert->NormalMap.ConnectSrcObject(normalTexture);
+			}
 			
-			addTextures(result->id.c_str(), result->textures, lambert->Ambient, Material::Texture::Ambient);
+			/*addTextures(result->id.c_str(), result->textures, lambert->Ambient, Material::Texture::Ambient);
 			addTextures(result->id.c_str(), result->textures, lambert->Diffuse, Material::Texture::Diffuse);
 			addTextures(result->id.c_str(), result->textures, lambert->Emissive, Material::Texture::Emissive);
 			addTextures(result->id.c_str(), result->textures, lambert->Bump, Material::Texture::Bump);
@@ -637,7 +630,7 @@ namespace readers {
 			else if (lambert->TransparentColor.IsValid()) {
 				FbxDouble3 color = lambert->TransparentColor.Get();
 				result->opacity.set((color[0] + color[1] + color[2]) / 3.0);
-			}
+			}*/
 
 			if (!material->Is<FbxSurfacePhong>())
 				return result;
@@ -649,26 +642,47 @@ namespace readers {
 			if (phong->Shininess.IsValid())
 				result->shininess.set((float)phong->Shininess.Get());
 
-			addTextures(result->id.c_str(), result->textures, phong->Specular, Material::Texture::Specular);
-			addTextures(result->id.c_str(), result->textures, phong->Reflection, Material::Texture::Reflection);
+			//create and add mix texture
+			FbxFileTexture* mixTexture = createTexture("m", "mixMap", material_id);
+			if (mixTexture)
+			{
+				phong->SpecularFactor.ConnectSrcObject(mixTexture);
+			}
+			addShader(phong);
+			/*addTextures(result->id.c_str(), result->textures, phong->Specular, Material::Texture::Specular);
+			addTextures(result->id.c_str(), result->textures, phong->Reflection, Material::Texture::Reflection);*/
 			return result;
+		}
+
+		FbxFileTexture* createTexture(const char * textureType, const char * textureName, std::string materialId)
+		{
+			if (settings->texturePaths[materialId].find(textureType)
+				== settings->texturePaths[materialId].end())
+				return nullptr;
+			std::string filename = settings->texturePaths[materialId][textureType];
+
+			FbxFileTexture* lTexture = FbxFileTexture::Create(scene, textureName);
+
+			// Set texture properties.
+			lTexture->SetFileName(filename.c_str()); // Resource file is in current directory.
+			lTexture->SetTextureUse(FbxTexture::eStandard);
+			lTexture->SetMappingType(FbxTexture::eUV);
+			lTexture->SetMaterialUse(FbxFileTexture::eModelMaterial);
+			lTexture->SetSwapUV(false);
+			lTexture->SetTranslation(0.0, 0.0);
+			lTexture->SetScale(1.0, 1.0);
+			lTexture->SetRotation(0.0, 0.0);
+			return lTexture;
 		}
 
 		void addShader(FbxSurfaceMaterial* lHlslMat)
 		{
-			FbxImplementation* lImpl = FbxImplementation::Create(scene, FbxString("Hlsl_Implementation"));
-			lHlslMat->AddImplementation(lImpl);
-			lHlslMat->SetDefaultImplementation(lImpl);
-			lImpl->RenderAPI = FBXSDK_RENDERING_API_DIRECTX;
-			lImpl->RenderAPIVersion = "9.0";
-			lImpl->Language = FBXSDK_SHADING_LANGUAGE_HLSL;
-			lImpl->LanguageVersion = "1.0";
-			FbxBindingTable* lTable = lTable = lImpl->AddNewTable("root", "shader");
-			lImpl->RootBindingName = "root";
-			// shader file
-			lTable->DescAbsoluteURL = "PBR_SEKIRO";
-			// technique name
-			lTable->DescTAG = "dx9";
+			
+			FbxProperty::Create(lHlslMat, FbxStringDT, "ShadingName");
+			FbxProperty prop = lHlslMat->FindProperty("ShadingName");
+			prop.ModifyFlag(FbxPropertyFlags::eUserDefined, true);
+			FbxString shaderName = FbxString("D:\h52m\src\Engine\EngineShaders\SDF.fx");
+			prop.Set(shaderName);
 		}
 
 		void addTextures(const char *materialName, std::vector<Material::Texture *> &textures, const FbxProperty &prop,  const Material::Texture::Usage &usage) {
