@@ -502,7 +502,7 @@ namespace readers {
 				}
 			}
 			int cnt = scene->GetGeometryCount();
-			printf("meshcount:%d", cnt);
+			printf("meshcount:%d\n", cnt);
 			for (int i = 0; i < cnt; ++i) {
 				FbxGeometry * geometry = scene->GetGeometry(i);
 				if (fbxMeshMap.find(geometry) == fbxMeshMap.end()) {
@@ -523,8 +523,8 @@ namespace readers {
 
 					int indexCount = (mesh->GetPolygonCount() * 3);
 					log->verbose(log::iSourceConvertFbxMeshInfo, getGeometryName(mesh), mesh->GetPolygonCount(), indexCount, mesh->GetControlPointsCount());
-					if (indexCount > settings->maxIndexCount)
-						log->warning(log::wSourceConvertFbxExceedsIndices, indexCount, settings->maxIndexCount);
+					/*if (indexCount > settings->maxIndexCount)
+						log->warning(log::wSourceConvertFbxExceedsIndices, indexCount, settings->maxIndexCount);*/
 					if (mesh->GetElementMaterialCount() <= 0) {
 						log->error(log::wSourceConvertFbxNoMaterial, getGeometryName(mesh));
 						continue;
@@ -601,8 +601,8 @@ namespace readers {
 			std::string material_id = material_name.substr(s + 1);
 			if (material_id == "mtd")
 			{
-				printf("mtd material:%s\n", material_name);
-				return result;
+				
+				material_id = material_name.substr(0, s);
 
 			}
 			

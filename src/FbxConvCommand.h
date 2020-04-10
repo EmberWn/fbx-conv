@@ -160,44 +160,55 @@ private:
 
 	bool parseTexturePaths()
 	{
+		// 材质信息存储于fbx同名文本文件
 		std::string material_info = settings->inFile;
 		setExtension(material_info, ".txt");
+		
 		std::ifstream fin;
-		/*if (!fin)
-		{
-			log->error(error = log::MissingTexturePathsFile, material_info);
-			return false;
-		}*/
 		char buff[1024];
 		fin.open(material_info);
+
 		if (fin.is_open())
 		{
-			printf("%s\n", settings->textureLoadDir.c_str());
+			printf("textures dir: %s\n", settings->textureLoadDir.c_str());
+			
 			std::string last_material_id = "";
+			
+			std::string mtd_name;
+			bool mtd = false;
+			
 			while (!fin.eof())
 			{
 				memset(buff, 0, 1024);
 				fin.getline(buff, 1204);
 				std::string message = buff;
-				int i = 0;
 				
+				int i = 0;
 				for (; i < message.size(); ++i)
 					if (!isdigit(message[i])) break;
+				
 				if (i == message.size())
 				{
+					mtd = false;
 					last_material_id = message;
 					printf("%s\n", last_material_id.c_str());
 					settings->texturePaths[last_material_id] = std::map<std::string, std::string>{};
 				}
 				else
 				{
-					std::string tex_type;
+					
 					int e = (int)message.find_last_of('.');
+					int pos = message.find_last_of('\\');
 					std::string extern_name = message.substr(e + 1);
 					if (extern_name == "mtd")
 					{
+						
+						mtd_name = message.substr(pos + 1, e - pos - 1);
 						printf("texture path store in mtd file\n");
 						printf("path:%s\n", message.c_str());
+						mtd = true;
+						settings->texturePaths[mtd_name] = std::map<std::string, std::string>{};
+						settings->texturePaths.erase(last_material_id);
 						continue;
 					}
 					else if (extern_name != "tif")
@@ -206,16 +217,16 @@ private:
 						return false;
 					}
 					int s = (int)message.find_last_of('_');
-					tex_type = message.substr(s + 1, e - s - 1);
-					
+					std::string tex_type = message.substr(s + 1, e - s - 1);
+					std::string tex_key = mtd ? mtd_name : last_material_id;
 					if (fbxconv::legal_postfix.find(tex_type) != fbxconv::legal_postfix.end()
-						&& settings->texturePaths[last_material_id].find(tex_type)
-						== settings->texturePaths[last_material_id].end())
+						&& settings->texturePaths[tex_key].find(tex_type)
+						== settings->texturePaths[tex_key].end())
 					{
-						int pos = message.find_last_of('\\');
+						
 						message = settings->textureLoadDir + message.substr(pos, e - pos) + ".tga";
 						printf("path:%s\n", message.c_str());
-						settings->texturePaths[last_material_id][tex_type] = message;
+						settings->texturePaths[tex_key][tex_type] = message;
 					}
 						
 				}
@@ -241,6 +252,7 @@ private:
 			log->error(error = log::eCommandLineUnknownFiletype, arg);
 		return def;
 	}
+
 
 	int guessType(const std::string &fn, const int &def = -1) {
 		int o = (int)fn.find_last_of('.');
