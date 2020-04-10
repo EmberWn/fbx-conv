@@ -7,7 +7,7 @@ fbx-conv
 
 整体工作流程：
 
-1.  使用noesis将flver文件转换为fbx文件
+1.  使用noesis将flver文件转换为fbx文件，需要在sekiro_format里面配置mtd目录才可以解析mtd文件
 2. 将dds文件转为tga文件，并集中到某一个目录
 3. 使用fbx-conv将贴图融入fbx，修改UVset的名字，添加默认smoothgroup等操作生成新的fbx
 4. 使用max插件将新的fbx分part导入
@@ -16,7 +16,7 @@ fbx-conv
 
 工作原理：读取fbx文件和noesis导出fbx时生成的材质信息文件，将材质信息嵌入fbx生成新的fbx。
 
-进展：目前可以实现导入三种类型的贴图。
+进展：目前可以实现导入三种类型的贴图，支持mtd文件识别。
 
 注意事项：由于可能会使用相同的贴图，导入时会报错，需要使用max插件分次导入
 
@@ -24,11 +24,8 @@ fbx-conv
 
 1. shader无法导入
 2. 透明度和double side等需要手动设置
-3. 如果贴图存储在mtd文件里则无法识别
 
 下一步计划：
-
-​	解析mtd文件
 
 ​	增加细节贴图导入
 
